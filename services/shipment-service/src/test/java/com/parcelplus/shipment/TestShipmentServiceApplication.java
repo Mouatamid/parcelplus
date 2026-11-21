@@ -1,4 +1,4 @@
-package com.parcelplus.shipmen;
+package com.parcelplus.shipment;
 
 import org.springframework.boot.SpringApplication;
 

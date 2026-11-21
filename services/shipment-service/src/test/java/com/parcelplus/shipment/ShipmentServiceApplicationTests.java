@@ -1,4 +1,4 @@
-package com.parcelplus.shipmen;
+package com.parcelplus.shipment;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
