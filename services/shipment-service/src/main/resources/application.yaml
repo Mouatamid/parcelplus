@@ -1,0 +1,16 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: shipment-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shipment_db}
+    username: ${DB_USER:parcelplus}
+    password: ${DB_PASSWORD:parcelplus}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  threads:
+    virtual:
+      enabled: true
