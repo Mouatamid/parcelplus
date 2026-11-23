@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: shipment-service
+  version: 0.1.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /api/shipments:
+    post:
+      operationId: createShipment
+      summary: Create a shipment in status CREATED
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShipmentRequest'
+      responses:
+        '201':
+          description: Shipment created
+          headers:
+            Location:
+              description: URL of the new shipment
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+        '400':
+          description: Validation failed
+  /api/shipments/{id}:
+    get:
+      operationId: getShipment
+      summary: Get one shipment by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The shipment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+        '404':
+          description: No shipment with this id
+components:
+  schemas:
+    ServiceLevel:
+      type: string
+      enum: [STANDARD, EXPRESS]
+    ShipmentStatus:
+      type: string
+      enum: [CREATED, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, EXCEPTION]
+    CreateShipmentRequest:
+      type: object
+      required: [originHub, destinationHub, serviceLevel]
+      properties:
+        originHub:
+          type: string
+          pattern: '^HUB-\d{3}$'
+        destinationHub:
+          type: string
+          pattern: '^HUB-\d{3}$'
+          description: Must differ from originHub
+        serviceLevel:
+          $ref: '#/components/schemas/ServiceLevel'
+    ShipmentResponse:
+      type: object
+      required: [id, trackingCode, originHub, destinationHub, serviceLevel, status, lastSequence, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        trackingCode:
+          type: string
+          pattern: '^PP[0-9A-F]{10}$'
+        originHub:
+          type: string
+        destinationHub:
+          type: string
+        serviceLevel:
+          $ref: '#/components/schemas/ServiceLevel'
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+        lastSequence:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
