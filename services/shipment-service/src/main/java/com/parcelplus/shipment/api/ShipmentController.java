@@ -34,6 +34,12 @@ public class ShipmentController {
         return ResponseEntity.created(location).body(ShipmentResponse.from(shipment));
     }
 
+    @PostMapping("/{id}/status-changes")
+    public ShipmentResponse changeStatus(@PathVariable UUID id,
+                                         @Valid @RequestBody ChangeStatusRequest request) {
+        return ShipmentResponse.from(service.changeStatus(id, request.status()));
+    }
+
     @GetMapping("/{id}")
     public ShipmentResponse get(@PathVariable UUID id) {
         return ShipmentResponse.from(service.getShipment(id));

@@ -29,6 +29,52 @@ paths:
                 $ref: '#/components/schemas/ShipmentResponse'
         '400':
           description: Validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/shipments/{id}/status-changes:
+    post:
+      operationId: changeShipmentStatus
+      summary: Move a shipment to the next status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeStatusRequest'
+      responses:
+        '200':
+          description: Status changed; lastSequence is incremented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+        '400':
+          description: Validation failed, or the id is not a UUID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No shipment with this id
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Transition not allowed, or the shipment was changed concurrently
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
   /api/shipments/{id}:
     get:
       operationId: getShipment
@@ -47,8 +93,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShipmentResponse'
+        '400':
+          description: The id is not a UUID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
         '404':
           description: No shipment with this id
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
 components:
   schemas:
     ServiceLevel:
@@ -57,6 +113,50 @@ components:
     ShipmentStatus:
       type: string
       enum: [CREATED, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, EXCEPTION]
+    ChangeStatusRequest:
+      type: object
+      required: [status, hubCode]
+      properties:
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+        hubCode:
+          type: string
+          pattern: '^HUB-\d{3}$'
+    ProblemDetail:
+      description: RFC 9457 problem details
+      type: object
+      required: [status]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        errors:
+          description: Only on 400 validation failures
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        shipmentId:
+          description: Only on 409 invalid transition
+          type: string
+          format: uuid
+        currentStatus:
+          description: Only on 409 invalid transition
+          $ref: '#/components/schemas/ShipmentStatus'
+        requestedStatus:
+          description: Only on 409 invalid transition
+          $ref: '#/components/schemas/ShipmentStatus'
     CreateShipmentRequest:
       type: object
       required: [originHub, destinationHub, serviceLevel]

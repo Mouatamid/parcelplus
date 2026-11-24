@@ -1,5 +1,6 @@
 package com.parcelplus.shipment.application;
 
+import com.parcelplus.shipment.domain.InvalidStatusTransitionException;
 import com.parcelplus.shipment.domain.ServiceLevel;
 import com.parcelplus.shipment.domain.Shipment;
 import com.parcelplus.shipment.domain.ShipmentStatus;
@@ -16,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ShipmentApplicationServiceTest {
@@ -49,6 +52,40 @@ class ShipmentApplicationServiceTest {
         Shipment s = nanoService.createShipment("HUB-001", "HUB-002", ServiceLevel.STANDARD);
 
         assertThat(s.getCreatedAt()).isEqualTo(Instant.parse("2026-11-23T10:00:00.123456Z"));
+    }
+
+    @Test
+    void changeStatusMovesShipmentAndSavesIt() {
+        Instant created = Instant.parse("2026-11-23T09:00:00Z");
+        Shipment existing = Shipment.create("PP0123456789", "HUB-001", "HUB-002", ServiceLevel.STANDARD, created);
+        when(repository.findById(existing.getId())).thenReturn(Optional.of(existing));
+        when(repository.save(any(Shipment.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Shipment s = service.changeStatus(existing.getId(), ShipmentStatus.PICKED_UP);
+
+        assertThat(s.getStatus()).isEqualTo(ShipmentStatus.PICKED_UP);
+        assertThat(s.getLastSequence()).isEqualTo(1);
+        assertThat(s.getUpdatedAt()).isEqualTo(NOW);
+        verify(repository).save(existing);
+    }
+
+    @Test
+    void changeStatusRejectsIllegalTransitionAndDoesNotSave() {
+        Shipment existing = Shipment.create("PP0123456789", "HUB-001", "HUB-002", ServiceLevel.STANDARD, NOW);
+        when(repository.findById(existing.getId())).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> service.changeStatus(existing.getId(), ShipmentStatus.DELIVERED))
+                .isInstanceOf(InvalidStatusTransitionException.class);
+        verify(repository, never()).save(any(Shipment.class));
+    }
+
+    @Test
+    void changeStatusThrowsWhenShipmentIsMissing() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.changeStatus(id, ShipmentStatus.PICKED_UP))
+                .isInstanceOf(ShipmentNotFoundException.class);
     }
 
     @Test

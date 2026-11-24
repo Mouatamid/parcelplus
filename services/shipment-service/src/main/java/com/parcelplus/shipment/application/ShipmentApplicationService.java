@@ -2,6 +2,7 @@ package com.parcelplus.shipment.application;
 
 import com.parcelplus.shipment.domain.ServiceLevel;
 import com.parcelplus.shipment.domain.Shipment;
+import com.parcelplus.shipment.domain.ShipmentStatus;
 import com.parcelplus.shipment.repository.ShipmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,13 @@ public class ShipmentApplicationService {
     public Shipment createShipment(String originHub, String destinationHub, ServiceLevel serviceLevel) {
         Shipment shipment = Shipment.create(
                 newTrackingCode(), originHub, destinationHub, serviceLevel, now());
+        return repository.save(shipment);
+    }
+
+    @Transactional
+    public Shipment changeStatus(UUID id, ShipmentStatus next) {
+        Shipment shipment = getShipment(id);
+        shipment.changeStatus(next, now());
         return repository.save(shipment);
     }
 
