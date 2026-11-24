@@ -2,25 +2,26 @@ openapi: 3.1.0
 info:
   title: shipment-service
   version: 0.1.0
-servers:
-  - url: http://localhost:8081
 paths:
   /api/shipments:
     post:
-      operationId: createShipment
+      tags:
+      - shipments
       summary: Create a shipment in status CREATED
+      operationId: createShipment
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateShipmentRequest'
+        required: true
       responses:
         '201':
           description: Shipment created
           headers:
             Location:
               description: URL of the new shipment
+              style: simple
               schema:
                 type: string
           content:
@@ -35,21 +36,23 @@ paths:
                 $ref: '#/components/schemas/ProblemDetail'
   /api/shipments/{id}/status-changes:
     post:
-      operationId: changeShipmentStatus
+      tags:
+      - shipments
       summary: Move a shipment to the next status
+      operationId: changeShipmentStatus
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
+      - name: id
+        in: path
         required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ChangeStatusRequest'
+        required: true
       responses:
         '200':
           description: Status changed; lastSequence is incremented
@@ -70,22 +73,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
         '409':
-          description: Transition not allowed, or the shipment was changed concurrently
+          description: Transition not allowed (adds shipmentId, currentStatus, requestedStatus),
+            or the shipment was changed concurrently
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
   /api/shipments/{id}:
     get:
-      operationId: getShipment
+      tags:
+      - shipments
       summary: Get one shipment by id
+      operationId: getShipment
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
         '200':
           description: The shipment
@@ -107,92 +113,93 @@ paths:
                 $ref: '#/components/schemas/ProblemDetail'
 components:
   schemas:
-    ServiceLevel:
-      type: string
-      enum: [STANDARD, EXPRESS]
-    ShipmentStatus:
-      type: string
-      enum: [CREATED, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, EXCEPTION]
-    ChangeStatusRequest:
+    CreateShipmentRequest:
       type: object
-      required: [status, hubCode]
       properties:
-        status:
-          $ref: '#/components/schemas/ShipmentStatus'
-        hubCode:
+        originHub:
           type: string
-          pattern: '^HUB-\d{3}$'
+          pattern: HUB-\d{3}
+        destinationHub:
+          type: string
+          pattern: HUB-\d{3}
+        serviceLevel:
+          type: string
+          enum:
+          - STANDARD
+          - EXPRESS
+      required:
+      - destinationHub
+      - originHub
+      - serviceLevel
     ProblemDetail:
-      description: RFC 9457 problem details
       type: object
-      required: [status]
       properties:
         type:
           type: string
+          format: uri
         title:
           type: string
         status:
           type: integer
+          format: int32
         detail:
           type: string
         instance:
           type: string
-        errors:
-          description: Only on 400 validation failures
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              message:
-                type: string
-        shipmentId:
-          description: Only on 409 invalid transition
-          type: string
-          format: uuid
-        currentStatus:
-          description: Only on 409 invalid transition
-          $ref: '#/components/schemas/ShipmentStatus'
-        requestedStatus:
-          description: Only on 409 invalid transition
-          $ref: '#/components/schemas/ShipmentStatus'
-    CreateShipmentRequest:
-      type: object
-      required: [originHub, destinationHub, serviceLevel]
-      properties:
-        originHub:
-          type: string
-          pattern: '^HUB-\d{3}$'
-        destinationHub:
-          type: string
-          pattern: '^HUB-\d{3}$'
-          description: Must differ from originHub
-        serviceLevel:
-          $ref: '#/components/schemas/ServiceLevel'
+          format: uri
+        properties:
+          type: object
+          additionalProperties: {}
     ShipmentResponse:
       type: object
-      required: [id, trackingCode, originHub, destinationHub, serviceLevel, status, lastSequence, createdAt, updatedAt]
       properties:
         id:
           type: string
           format: uuid
         trackingCode:
           type: string
-          pattern: '^PP[0-9A-F]{10}$'
         originHub:
           type: string
         destinationHub:
           type: string
         serviceLevel:
-          $ref: '#/components/schemas/ServiceLevel'
+          type: string
+          enum:
+          - STANDARD
+          - EXPRESS
         status:
-          $ref: '#/components/schemas/ShipmentStatus'
+          type: string
+          enum:
+          - CREATED
+          - PICKED_UP
+          - IN_TRANSIT
+          - OUT_FOR_DELIVERY
+          - DELIVERED
+          - EXCEPTION
         lastSequence:
           type: integer
+          format: int32
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+    ChangeStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - CREATED
+          - PICKED_UP
+          - IN_TRANSIT
+          - OUT_FOR_DELIVERY
+          - DELIVERED
+          - EXCEPTION
+        hubCode:
+          type: string
+          pattern: HUB-\d{3}
+      required:
+      - hubCode
+      - status

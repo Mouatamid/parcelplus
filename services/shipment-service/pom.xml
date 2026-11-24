@@ -28,6 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<!-- Spring Boot 4.2.x -> springdoc 3.2.1 (springdoc.org FAQ compatibility matrix) -->
+		<springdoc.version>3.2.1</springdoc.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -53,6 +55,12 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<!-- Generates /v3/api-docs from the controllers. "-api" = no Swagger UI. -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 
 		<dependency>
