@@ -50,11 +50,18 @@ class ShipmentControllerIT {
         String location = created.getResponse().getHeader("Location");
         assertThat(location).matches(".*/api/shipments/[0-9a-f-]{36}");
 
-        mvc.perform(get(location))
+        MvcResult fetched = mvc.perform(get(location))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CREATED"))
+                .andExpect(jsonPath("$.lastSequence").value(0))
                 .andExpect(jsonPath("$.originHub").value("HUB-001"))
                 .andExpect(jsonPath("$.destinationHub").value("HUB-002"))
-                .andExpect(jsonPath("$.serviceLevel").value("EXPRESS"));
+                .andExpect(jsonPath("$.serviceLevel").value("EXPRESS"))
+                .andReturn();
+
+        // Same shipment: the stored row serializes to exactly what POST returned.
+        assertThat(fetched.getResponse().getContentAsString())
+                .isEqualTo(created.getResponse().getContentAsString());
     }
 
     @Test

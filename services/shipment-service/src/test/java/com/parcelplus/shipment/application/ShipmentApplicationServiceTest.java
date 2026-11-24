@@ -40,6 +40,18 @@ class ShipmentApplicationServiceTest {
     }
 
     @Test
+    void truncatesTimestampsToMicrosecondsLikeThePostgresColumn() {
+        Instant withNanos = Instant.parse("2026-11-23T10:00:00.123456789Z");
+        ShipmentApplicationService nanoService =
+                new ShipmentApplicationService(repository, Clock.fixed(withNanos, ZoneOffset.UTC));
+        when(repository.save(any(Shipment.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Shipment s = nanoService.createShipment("HUB-001", "HUB-002", ServiceLevel.STANDARD);
+
+        assertThat(s.getCreatedAt()).isEqualTo(Instant.parse("2026-11-23T10:00:00.123456Z"));
+    }
+
+    @Test
     void returnsExistingShipment() {
         Shipment existing = Shipment.create("PP0123456789", "HUB-001", "HUB-002", ServiceLevel.STANDARD, NOW);
         when(repository.findById(existing.getId())).thenReturn(Optional.of(existing));

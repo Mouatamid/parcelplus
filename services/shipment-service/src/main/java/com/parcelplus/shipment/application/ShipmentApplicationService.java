@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -24,8 +25,14 @@ public class ShipmentApplicationService {
     @Transactional
     public Shipment createShipment(String originHub, String destinationHub, ServiceLevel serviceLevel) {
         Shipment shipment = Shipment.create(
-                newTrackingCode(), originHub, destinationHub, serviceLevel, Instant.now(clock));
+                newTrackingCode(), originHub, destinationHub, serviceLevel, now());
         return repository.save(shipment);
+    }
+
+    // Postgres TIMESTAMPTZ keeps microseconds. Truncating here makes what we return
+    // from POST equal to what the database stores and GET returns.
+    private Instant now() {
+        return clock.instant().truncatedTo(ChronoUnit.MICROS);
     }
 
     @Transactional(readOnly = true)
