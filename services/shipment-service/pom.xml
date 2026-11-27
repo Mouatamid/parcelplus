@@ -5,30 +5,17 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.2.1-SNAPSHOT</version>
+		<version>4.2.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.parcelplus</groupId>
 	<artifactId>shipment-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	<name>shipment-service</name>
+	<description>Command side of ParcelPlus: creates shipments and enforces the status state machine.</description>
 	<properties>
 		<java.version>21</java.version>
-		<!-- Spring Boot 4.2.x -> springdoc 3.2.1 (springdoc.org FAQ compatibility matrix) -->
+		<!-- Spring Boot 4.2.x -> springdoc 3.2.1 (springdoc.org FAQ compatibility matrix, re-checked for Boot 4.2.0) -->
 		<springdoc.version>3.2.1</springdoc.version>
 	</properties>
 	<dependencies>
@@ -131,25 +118,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>
