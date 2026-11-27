@@ -22,10 +22,18 @@ class ShipmentServiceApplicationIT {
 	}
 
 	@Test
-	void flywayHistoryContainsSuccessfulV1() {
+	void flywayHistoryContainsSuccessfulV1AndV2() {
 		List<String> versions = jdbc.queryForList(
 				"SELECT version FROM flyway_schema_history WHERE success = true", String.class);
 
-		assertThat(versions).contains("1");
+		assertThat(versions).contains("1", "2");
+	}
+
+	@Test
+	void outboxHasPartialIndexOnUnpublishedRows() {
+		String indexDef = jdbc.queryForObject(
+				"SELECT indexdef FROM pg_indexes WHERE indexname = 'idx_outbox_unpublished'", String.class);
+
+		assertThat(indexDef).contains("(created_at)").contains("WHERE (published_at IS NULL)");
 	}
 }
